@@ -21,11 +21,11 @@ checkenv() {
   sudo apt install -y libudev-dev
 
   sudo apt install -y \
-	  libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
+	  	  libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
 	  freeglut3-dev \
 	  libxkbcommon-x11-dev libxkbcommon-dev \
 	  libxrender-dev 
-  
+
   # Qt GUi and Further Image Formats
   sudo apt install -y \
     libjpeg-dev libpng-dev libmd4c-dev \
@@ -35,7 +35,7 @@ checkenv() {
 
   # system libs for qpa-xcb
   sudo apt install -y \
-    libxcb* \
+libxcb* \
 	  libxcursor-dev libx11-dev libx11-xcb-dev \
 	  libxi-dev \
 	  libdrm-dev
@@ -64,7 +64,7 @@ install_nodejs() {
 	  sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
   echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | \
     sudo tee /etc/apt/sources.list.d/nodesource.list
-  sudo apt update
+  sudo apt update 
   sudo apt install -y nodejs
 }
 
@@ -99,6 +99,18 @@ checkenv
 ver="5.15.6" # publish at 2022.9
 pkgName=qt-everywhere-opensource-src-$ver.tar.xz
 
+last_setup() {
+  qtchooser -l 1> /dev/null 2> /dev/null
+  if [ $? -eq 127 ]; then sudo apt install -y qtchooser
+  fi
+  qtchooser -install qt$ver /usr/local/Qt-$ver/bin/qmake
+
+  sudo echo "export PATH=\$PATH:/usr/local/Qt-$ver/bin" >> ~/.bashrc
+  source ~/.bashrc
+
+  qmake -v
+}
+
 install_tslib
 
 #install_nodejs
@@ -106,7 +118,7 @@ sudo apt autoremove -y
 
 if [ ! -f $pkgName ]; then
   wget --no-verbose -O $pkgName \
-	  https://download.qt.io/archive/qt/5.15/$ver/single/$pkgName # 594M+
+	https://download.qt.io/archive/qt/5.15/$ver/single/$pkgName # 594M+
 else
   echo "qt $ver have downloaded!"
 fi
@@ -132,12 +144,12 @@ cd Qt5/
 rm -rf config.cache
 
 ./configure -opensource -confirm-license \
-  -xcb \
-  -tslib \
-  -qt-libpng -qt-libjpeg \
+ 	-xcb \
+	-tslib \
+	-qt-libpng -qt-libjpeg \
 	-no-opengl \
-  -no-openssl \
-  -no-glib
+	-no-openssl \
+	-no-glib
 
 op=0
 read -p "start make -jx? [Y/n] " op 
@@ -151,7 +163,7 @@ esac
 
 sudo make install
 
-# test
-qmake -v
-
 cd ..
+
+# test
+last_setup
