@@ -21,7 +21,7 @@ checkenv() {
   sudo apt install -y libudev-dev
 
   sudo apt install -y \
-	  	  libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
+	  libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
 	  freeglut3-dev \
 	  libxkbcommon-x11-dev libxkbcommon-dev \
 	  libxrender-dev 
@@ -77,8 +77,8 @@ install_tslib() {
 
   sudo apt install -y autoconf automake libtool
 
-  ver=1.22
-  pkgName=tslib-$ver.tar.xz
+  local ver=1.22
+  local pkgName=tslib-$ver.tar.xz
   if [ ! -f $pkgName ]; then
     wget --no-verbose \
         https://github.com/libts/tslib/releases/download/$ver/$pkgName
@@ -144,7 +144,7 @@ cd Qt5/
 rm -rf config.cache
 
 ./configure -opensource -confirm-license \
- 	-xcb \
+  -xcb \
 	-tslib \
 	-qt-libpng -qt-libjpeg \
 	-no-opengl \
