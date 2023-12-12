@@ -8,6 +8,27 @@ set -u
 # Linux: Ubuntu 20.04
 # ----- ----- ----- -----
 
+# v2.7.18
+install_python2() {
+  python2 -V 2> /dev/null
+  if [ $? -eq 127 ]; then
+    local pos=`pwd`
+    cd /opt
+    if [ ! -f Python-2.7.18.tgz ]; then
+      sudo wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
+    fi
+    sudo tar zxf Python*
+
+    cd Python-2.7.18
+    sudo ./configure --enable-optimizations
+    sudo make altinstall
+    sudo ln -sfn '/usr/local/bin/python2.7' /usr/bin/python2
+    sudo update-alternatives --config python
+
+    cd $pos
+  fi
+}
+
 checkenv() {
   # Build options
   sudo apt install -y flex bison build-essential
@@ -25,6 +46,9 @@ checkenv() {
 	  freeglut3-dev \
 	  libxkbcommon-x11-dev libxkbcommon-dev \
 	  libxrender-dev 
+
+  # Qt Core need PCRE2
+  sudo apt install -y libpcre2-*
 
   # Qt GUi and Further Image Formats
   sudo apt install -y \
@@ -44,7 +68,8 @@ libxcb* \
   sudo apt install -y gperf
   gperf --version | head --lines=1
 
-  # QtWebEngine required: nss dbus
+  # QtWebEngine required: python2 nss dbus
+  install_python2
   sudo apt install -y libnss*-dev libdbus-1-dev
 }
 
@@ -143,10 +168,13 @@ printf "%0.s----- " {1..9}
 cd Qt5/
 rm -rf config.cache
 
-./configure -opensource -confirm-license \
+# -recheck-all: avoid cache
+./configure -recheck-all \
+  -opensource -confirm-license \
   -xcb \
 	-tslib \
 	-qt-libpng -qt-libjpeg \
+  -system-pcre \
 	-no-opengl \
 	-no-openssl \
 	-no-glib
