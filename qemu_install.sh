@@ -2,10 +2,22 @@
 
 set -u
 
-# prere: make flex bison
+# ----- ----- ----- -----
+# install qemu v8+ with source
+# Arch: x86
+# Linux: Ubuntu 22.04
+#
+# Usage: just modify the value of verWant
+# ----- ----- ----- -----
+
+# prere: gcc make flex bison
+#        install 4 tools above with your hands !
 check_env() {
-  sudo apt install -y libtool \
-      make ninja-build pkg-config
+  flex --version
+  if [ $? -eq 127 ]; then exit;
+  fi 
+
+  sudo apt install -y libtool ninja-build pkg-config
 
   sudo apt install -y	python3-pip \
       python3-sphinx python3-venv python*-capstone
@@ -27,19 +39,53 @@ check_env() {
       libzstd-dev libdw-dev
 }
 
+# get tar from local directory /opt or download again
+#
+getpkg_qemu() {
+  local tarList=()
+  local tarCheck=0
+  # e.g. /opt/qemu-8.2.1.tar.bz2
+  for pkg in /opt/*
+  do
+    local pkgName=`basename $pkg`
+    if [[ ${pkgName%-*} == "qemu" ]]; then tarList+=($pkg)
+    fi
+    if [[ $pkgName == $tarWant ]]; then tarCheck=1
+    fi
+  done
+
+  local len=${#tarList[@]}
+  echo "find $len related package in local, best one in them is: "
+  du -sh ${tarList[$len-1]}
+  
+  echo -e "\033[36m ----- ----- ----- ----- ----- ----- \033[0m"
+  if [ $tarCheck -eq 1 ]; then echo "package which you want have existed: "
+    du -sh /opt/$tarWant
+    return 0
+  fi
+ 
+  local op=0
+  read -p "Do you want download the package: $tarWant ? [Y/n] " op
+  case $op in
+    Y | y | 1) sudo wget --directory-prefix /opt \
+	https://download.qemu.org/$tarWant ;;
+    *) tarWant=`basename ${tarList[$len-1]}`
+  esac
+}
+
 install_qemu() {
-  local ver="8.1.3"
-  if [ $# -eq 1 ]; then ver=$1
+  local pkg="qemu-8.2.0.tar.bz2"
+  if [ $# -eq 1 ]; then pkg=$1
+  fi
+  local pkgDir=${pkg%.tar*}
+  
+  # extract it to current path
+  if [ ! -d $pkgDir ]; then tar -xjf /opt/$pkg -C .
   fi
 
-  local pkgDir="qemu-$ver"
-  if [ ! -d $pkgDir ]; then
-    wget --no-verbose \
-	https://download.qemu.org/$pkgDir.tar.bz2 # 143M
-    tar -xjf $pkgDir.tar.bz2
-  fi
   cd $pkgDir
   du -sh .
+
   ./configure
   
   local op=0
@@ -56,10 +102,19 @@ install_qemu() {
   cd ..
 }
 
+# ----- ----- main ----- -----
 check_env
 
 pos=`pwd`
-install_qemu "8.1.3"
+
+verWant="8.2.1" # you can modify it !
+tarWant="qemu-$verWant.tar.bz2"
+
+getpkg_qemu
+
+echo "$tarWant will be used!" 
+install_qemu $tarWant
+
 cd $pos
 
 # test
