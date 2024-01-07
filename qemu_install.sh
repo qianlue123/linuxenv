@@ -27,7 +27,7 @@ check_env() {
     indent
 
   sudo apt install -y acpica-tools # Program iasl
-  sudo snap install install cmake --classic
+  sudo snap install cmake --classic
 
   sudo apt install -y	python3-pip \
       python3-sphinx python3-venv python*-capstone
@@ -51,7 +51,7 @@ check_env() {
   # Run-time dependency 
   sudo apt install -y \
     liburing-dev libnfs-dev libseccomp-dev libxkbcommon-dev \
-    libpulse-dev libpippewire*-dev libiscsi-dev libzstd-dev \
+    libpulse-dev libpipewire*-dev libiscsi-dev libzstd-dev \
     libudev-dev libssh-dev libepoxy-dev libgbm-dev \
     libgmp-dev libgnutls28-dev libcapstone-dev libcacard-dev \
     libusbredirparser-dev libpmem-dev libdaxctl-dev libtasn1-dev \
@@ -68,7 +68,7 @@ check_env() {
 # install run-time dependency canokey-qemu
 #
 install_canokey() {
-  if [ -d canokey-qemu ]; then
+  if [ ! -d canokey-qemu ]; then
     git clone --recursive https://github.com/canokeys/canokey-qemu.git
   fi
   cd canokey-qemu
@@ -96,9 +96,11 @@ getpkg_qemu() {
   done
 
   local len=${#tarList[@]}
-  echo "find $len related package in local, best one in them is: "
-  du -sh ${tarList[$len-1]}
-  
+  if [ $len -gt 0 ]; then
+    echo "find $len related package in local, best one in them is: "
+    du -sh ${tarList[$len-1]}
+  fi
+
   echo -e "\033[36m ----- ----- ----- ----- ----- ----- \033[0m"
   if [ $tarCheck -eq 1 ]; then echo "package which you want have existed: "
     du -sh /opt/$tarWant
