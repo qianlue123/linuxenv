@@ -19,6 +19,9 @@ check_env() {
 
   sudo apt install -y libtool ninja-build pkg-config
 
+  sudo apt install -y acpica-tools # Program iasl
+  sudo snap install install cmake --classic
+
   sudo apt install -y	python3-pip \
       python3-sphinx python3-venv python*-capstone
 
