@@ -17,7 +17,14 @@ check_env() {
   if [ $? -eq 127 ]; then exit;
   fi 
 
-  sudo apt install -y libtool ninja-build pkg-config
+  dtc --version 2> /dev/null
+  if [ $? -eq 127 ]; then sudo apt install -y device-tree-compiler
+  fi
+
+  # Program 
+  sudo apt install -y \
+    libtool ninja-build pkg-config \
+    indent
 
   sudo apt install -y acpica-tools # Program iasl
   sudo snap install install cmake --classic
@@ -27,19 +34,50 @@ check_env() {
 
   pip install sphinx-rtd-theme
 
+  # Crypto
+  sudo apt install -y libgcrypt20-dev libkeyutils-dev
+
+  # UI
+  sudo apt install -y \
+    libpixman-1-dev libjpeg-dev libpng-dev \
+    libspice-protocol-dev libspice-server-dev libncursesw*-dev
+
+  # Audio backends
+  sudo apt install -y libsndio-dev 
+
+  # Network backends
+  sudo apt install -y libslirp-dev
+
+  # Run-time dependency 
+  sudo apt install -y \
+    liburing-dev libnfs-dev libseccomp-dev libxkbcommon-dev \
+    libpulse-dev libpippewire*-dev libiscsi-dev libzstd-dev \
+    libudev-dev libssh-dev libepoxy-dev libgbm-dev \
+    libgmp-dev libgnutls28-dev libcapstone-dev libcacard-dev \
+    libusbredirparser-dev libpmem-dev libdaxctl-dev libtasn1-dev \
+    libfuse3-dev libbpf-dev libdw-dev libgvnc-1*-dev \
+    libusb-dev libusb-1*-dev
+
   sudo apt install -y \
       build-essential zlib1g-dev libglib2.0-dev binutils-dev \
       libboost-all-dev autoconf \
-      libssl-dev libpixman-1-dev
+      libssl-dev
 
-  # UI
-  sudo apt install -y libjpeg-dev libpng-dev 
+}
 
-  # Dependencies
-  sudo apt install -y libtasn1-dev \
-      libiscsi-dev libudev-dev \
-      libusb-dev libusb-1*-dev \
-      libzstd-dev libdw-dev
+# install run-time dependency canokey-qemu
+#
+install_canokey() {
+  if [ -d canokey-qemu ]; then
+    git clone --recursive https://github.com/canokeys/canokey-qemu.git
+  fi
+  cd canokey-qemu
+  sudo rm -rf build
+  mkdir build && cd build
+  cmake ..
+  make -j`nproc`
+  sudo make install
+  sudo ldconfig
 }
 
 # get tar from local directory /opt or download again
@@ -109,6 +147,10 @@ install_qemu() {
 check_env
 
 pos=`pwd`
+
+ldconfig -p | grep canokey-qemu.so
+if [ $? -eq 1 ]; then install_canokey
+fi
 
 verWant="8.2.1" # you can modify it !
 tarWant="qemu-$verWant.tar.bz2"
